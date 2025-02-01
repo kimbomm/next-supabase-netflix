@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
+import MovieCardList from "components/movie-card-list";
 export default function UI() {
-    return (
-        <main>
-            <h1>home</h1>
-        </main>
-    )
+  return (
+    <main className="mt-16">
+      <MovieCardList />
+    </main>
+  );
 }

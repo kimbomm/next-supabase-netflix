@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../config/material-tailwind-theme-provider";
 import ReactQueryClientProvider from "../config/react-query-client-provider";
+import Header from "components/header";
+import Footer from "components/footer";
+import RecoilProvider from "config/recoil-provider";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,6 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <RecoilProvider>
     <html lang="en">
       <head>
         <link
@@ -37,14 +32,18 @@ export default function RootLayout({
           />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.className}`}
       >
-        <ReactQueryClientProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
-        </ReactQueryClientProvider>
+        
+          <ReactQueryClientProvider>
+            <ThemeProvider>
+              <Header />
+                {children}
+              <Footer />
+            </ThemeProvider>
+          </ReactQueryClientProvider>
       </body>
     </html>
+    </RecoilProvider>
   );
 }
