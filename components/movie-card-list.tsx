@@ -1,22 +1,55 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { searchMovies } from "actions/movieActions";
 import MovieCard from "./movie-card";
 import { Spinner } from "@material-tailwind/react";
 import { useRecoilValue } from "node_modules/recoil";
 import { searchState } from "utils/recoil/atoms";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
+
 export default function MovieCardList() {
     const search = useRecoilValue(searchState);
-    const getAllMoviesQuery = useQuery({
+    const { ref, inView } = useInView({ threshold: 0 });
+    
+    const {
+        data,
+        isFetching,
+        isFetchingNextPage,
+        fetchNextPage,
+        hasNextPage,
+    } = useInfiniteQuery({
+        initialPageParam: 1,
         queryKey: ["movies", search],
-        queryFn: () => searchMovies(search),
+        queryFn: ({pageParam}) => searchMovies({search, page: pageParam, pageSize: 12}),
+        getNextPageParam: (lastPage) => {
+            return lastPage.hasNextPage ? lastPage.page + 1 : null
+        },
     })
+
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetching && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [inView, hasNextPage])
+
+    
+    useEffect(() => {
+        console.log(inView);
+    }, [inView])
 
     
   return (
     <div className="grid gap-1 md:grid-cols-4 grid-cols-3 w-full h-full">
-        {getAllMoviesQuery.isLoading && <Spinner />}
-        {getAllMoviesQuery.data && getAllMoviesQuery.data.map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+        {(isFetching || isFetchingNextPage) && <Spinner />}
+        {
+            data?.pages && (
+                <>
+                    {data?.pages.map((page) => page.data)?.flat()?.map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+                    <div ref={ref} className="h-1" />
+                </>
+            )
+        }
     </div>
   );
 }

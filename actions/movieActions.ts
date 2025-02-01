@@ -12,15 +12,32 @@ function handleError(error: Error) {
   }
 }
 
-export async function searchMovies(searchInput = ""): Promise<MovieRow[]> {
+export async function searchMovies({ search, page, pageSize }) {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("movies")
-    .select("*")
-    .like("title", `%${searchInput}%`)
-    .order("id", { ascending: false });
-  handleError(error);
-  return data;
+    .select("*", { count: "exact" })
+    .like("title", `%${search}%`)
+    .order("id", { ascending: true })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+
+  const hasNextPage = count > page * pageSize;
+  if (error) {
+    console.error(error);
+    return {
+      data: [],
+      count: 0,
+      page: null,
+      pageSize: null,
+      error,
+    };
+  }
+  return {
+    data,
+    page,
+    pageSize,
+    hasNextPage,
+  };
 }
 
 export async function getMovie(id): Promise<MovieRow> {
